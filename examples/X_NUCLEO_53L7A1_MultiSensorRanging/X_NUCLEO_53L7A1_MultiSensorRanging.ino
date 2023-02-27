@@ -43,7 +43,6 @@
 #include <Wire.h>
 #include <vl53l7cx_class.h>
 
-
 #ifdef ARDUINO_SAM_DUE
   #define DEV_I2C Wire1
 #else
@@ -52,12 +51,11 @@
 #define SerialPort Serial
 
 /* Please uncomment the line below if you want also to use the satellites */
-//#define SATELLITES_MOUNTED
+#define SATELLITES_MOUNTED
 
 #define LPN_TOP_PIN 5
 #define I2C_RST_TOP_PIN 3
 #define PWREN_TOP_PIN A3
-
 
 #ifdef SATELLITES_MOUNTED
   #define LPN_LEFT_PIN 4
@@ -70,11 +68,13 @@
 #endif
 
 // Components.
-VL53L7CX sensor_vl53l7cx_top(&DEV_I2C, LPN_TOP_PIN, I2C_RST_TOP_PIN);
+VL53L7CX sensor_vl53l7cx_top(&DEV_I2C, LPN_TOP_PIN,I2C_RST_TOP_PIN);
 #ifdef SATELLITES_MOUNTED
-  VL53L7CX sensor_vl53l7cx_left(&DEV_I2C, LPN_LEFT_PIN, I2C_RST_LEFT_PIN );
-  VL53L7CX sensor_vl53l7cx_right(&DEV_I2C, LPN_RIGHT_PIN, I2C_RST_RIGHT_PIN);
+  VL53L7CX sensor_vl53l7cx_left(&DEV_I2C, LPN_LEFT_PIN,I2C_RST_LEFT_PIN);
+  VL53L7CX sensor_vl53l7cx_right(&DEV_I2C, LPN_RIGHT_PIN,I2C_RST_RIGHT_PIN);
 #endif
+
+uint8_t status;
 
 /* Setup ---------------------------------------------------------------------*/
 
@@ -82,7 +82,6 @@ void setup()
 {
   // Initialize serial for output.
   SerialPort.begin(460800);
-  SerialPort.println("Starting...");
 
   // Initialize I2C bus.
   DEV_I2C.begin();
@@ -94,9 +93,24 @@ void setup()
     delay(10);
   }
 
+#ifdef SATELLITES_MOUNTED
+  // Enable PWREN left pin if present
+  if (PWREN_LEFT_PIN >= 0) {
+    pinMode(PWREN_LEFT_PIN, OUTPUT);
+    digitalWrite(PWREN_LEFT_PIN, HIGH);
+    delay(10);
+  }
+  // Enable PWREN right pin if present
+  if (PWREN_RIGHT_PIN >= 0) {
+    pinMode(PWREN_RIGHT_PIN, OUTPUT);
+    digitalWrite(PWREN_RIGHT_PIN, HIGH);
+    delay(10);
+  }
+#endif
+
   // Configure VL53L7CX top component.
   sensor_vl53l7cx_top.begin();
-
+  
   // Switch off VL53L7CX top component.
   sensor_vl53l7cx_top.vl53l7cx_off();
 
@@ -115,20 +129,19 @@ void setup()
 #endif
 
   //Initialize all the sensors
-  sensor_vl53l7cx_top.init_sensor();  
+  status=sensor_vl53l7cx_top.init_sensor(0x54);  
   
 #ifdef SATELLITES_MOUNTED
-  sensor_vl53l7cx_left.init_sensor(0x12);
-  sensor_vl53l7cx_right.init_sensor(0x14);
+  status=sensor_vl53l7cx_left.init_sensor(0x56);
+  status=sensor_vl53l7cx_right.init_sensor(0x58);
 #endif
 
   // Start Measurements
-  sensor_vl53l7cx_top.vl53l7cx_start_ranging();   
-
-
+  status=sensor_vl53l7cx_top.vl53l7cx_start_ranging();   
+  
 #ifdef SATELLITES_MOUNTED
-  sensor_vl53l7cx_left.vl53l7cx_start_ranging();
-  sensor_vl53l7cx_right.vl53l7cx_start_ranging();
+   status=sensor_vl53l7cx_left.vl53l7cx_start_ranging();
+   status=sensor_vl53l7cx_right.vl53l7cx_start_ranging();
 #endif
 }
 
@@ -138,11 +151,10 @@ void loop()
   uint8_t NewDataReady = 0;
   char report[128];
   uint8_t status;
-
+  
   do {
     status = sensor_vl53l7cx_top.vl53l7cx_check_data_ready(&NewDataReady);
   } while (!NewDataReady);
-
 
   if ((!status) && (NewDataReady != 0)) {
     // Read measured distance. RangeStatus = 5 and 9 means valid data
@@ -167,14 +179,13 @@ void loop()
     // Read measured distance. RangeStatus = 5 and 9 means valid data
     sensor_vl53l7cx_left.vl53l7cx_get_ranging_data(&results);
     snprintf(report, sizeof(report), "VL53L7CX Left: Status = %3u, Distance = %5u mm, Signal = %6u kcps/spad\r\n",
-             results.target_status,
-             results.distance_mm,
-             results.signal_per_spad);
+             results.target_status[0],
+             results.distance_mm[0],
+             results.signal_per_spad[0]);
     SerialPort.print(report);
   }
 
   NewDataReady = 0;
-
   do {
     status = sensor_vl53l7cx_right.vl53l7cx_check_data_ready(&NewDataReady);
   } while (!NewDataReady);
@@ -183,9 +194,9 @@ void loop()
     // Read measured distance. RangeStatus = 5 and 9 means valid data
     sensor_vl53l7cx_right.vl53l7cx_get_ranging_data(&results);
     snprintf(report, sizeof(report), "VL53L7CX Right: Status = %3u, Distance = %5u mm, Signal = %6u kcps/spad\r\n",
-             results.target_status,
-             results.distance_mm,
-             results.signal_per_spad);
+             results.target_status[0],
+             results.distance_mm[0],
+             results.signal_per_spad[0]);
     SerialPort.print(report);
   }
 

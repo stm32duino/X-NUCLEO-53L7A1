@@ -1,4 +1,4 @@
-name: VL53L7CX Continuous Integration
+name: X_NUCLEO_53L7A1 Continuous Integration
 on:
   push:
     branches:
