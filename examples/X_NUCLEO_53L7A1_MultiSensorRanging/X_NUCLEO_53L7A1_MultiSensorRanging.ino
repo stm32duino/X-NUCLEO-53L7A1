@@ -58,13 +58,13 @@
 #define PWREN_TOP_PIN A3
 
 #ifdef SATELLITES_MOUNTED
-  #define LPN_LEFT_PIN 4
-  #define I2C_RST_LEFT_PIN 8 
-  #define PWREN_LEFT_PIN A5
+  #define LPN_LEFT_PIN 6
+  #define I2C_RST_LEFT_PIN 7 
+  #define PWREN_LEFT_PIN A0
   
-  #define LPN_RIGHT_PIN 6  
-  #define I2C_RST_RIGHT_PIN 7
-  #define PWREN_RIGHT_PIN A0
+  #define LPN_RIGHT_PIN 4  
+  #define I2C_RST_RIGHT_PIN 8
+  #define PWREN_RIGHT_PIN A5
 #endif
 
 // Components.
