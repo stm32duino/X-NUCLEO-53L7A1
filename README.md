@@ -13,7 +13,7 @@ There are 3 examples with the X-NUCLEO-53L7A1 library:
 
 * X_NUCLEO_53L7A1_ThresholdsDetection: This example code is to show how to configure the thresholds detection.
   
-* X_NUCLEO_53L7A1__MultiSensorRanging: This example code is to show how to make three VL53L7CX ToF sensors run simultaneously.
+* X_NUCLEO_53L7A1_MultiSensorRanging: This example code is to show how to make three VL53L7CX ToF sensors run simultaneously.
 
 ## Dependencies
 
